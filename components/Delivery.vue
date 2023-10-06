@@ -1,13 +1,20 @@
 <template>
   <v-data-table
     :headers="headers"
-    :items="desserts"
-    sort-by="calories"
+    :items="deliveryComputed"
     class="elevation-1"
     loading="false"
     loading-text="Loading... Please wait"
     :search="search"
+    :sort-by.sync="sortBy"
+    :sort-desc.sync="sortDesc"
   >
+    <template v-slot:item.timestamp="{ item }">
+      {{ formatDate(item.timestamp) }}
+    </template>
+    <template v-slot:item.price="{ item }">
+      {{ formatCurrency(item.price) }}
+    </template>
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title> Delivery</v-toolbar-title>
@@ -36,49 +43,52 @@
               <v-container>
                 <v-row>
                   <v-col cols="12" sm="6" md="">
-                    <v-text-field
-                      v-model="editedDelivery.supplier"
-                      label="Supplier"
+                    {{ editedDelivery.code }}
+                    <v-select
                       dense
+                      v-model="editedDelivery.code"
+                      :items="supplierComputed"
+                      :item-text="'company_name'"
+                      :item-value="'code'"
+                      menu-props="auto"
+                      label="Select Supplier"
                       prepend-icon="mdi-account-outline"
-                    ></v-text-field>
+                      return-object
+                    ></v-select>
                   </v-col>
                 </v-row>
                 <v-row>
                   <v-col cols="12" sm="6" md="">
-                    <v-text-field
-                      v-model="editedDelivery.item"
-                      label="Item"
+                    {{ editedDelivery.description }}
+                    <v-select
                       dense
+                      v-model="editedDelivery.description"
+                      :items="itemComputed"
+                      :item-text="'item_description'"
+                      :item-value="'code'"
+                      menu-props="auto"
+                      label="Select Item"
                       prepend-icon="mdi-format-list-bulleted"
-                    ></v-text-field>
+                      return-object
+                    ></v-select>
                   </v-col>
                 </v-row>
-                <v-row>
+
+                <!-- <v-row>
                   <v-col cols="12" sm="6" md="">
                     <v-text-field
-                      v-model="editedDelivery.uom"
-                      label="Unit of Measurement"
-                      dense
-                      prepend-icon="mdi-scale"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-                <v-row>
-                  <v-col cols="12" sm="6" md="">
-                    <v-text-field
-                      v-model="editedDelivery.qty"
-                      label="Quantity"
+                      v-model="editedDelivery.description"
+                      label="Item Description"
                       dense
                       prepend-icon="mdi-package-variant-closed"
                     ></v-text-field>
                   </v-col>
-                </v-row>
+                </v-row> -->
 
                 <v-row>
                   <v-col cols="12" sm="6" md="">
                     <v-text-field
-                      v-model="editedDelivery.cost"
+                      v-model="editedDelivery.price"
                       label="Cost"
                       dense
                       prepend-icon="mdi-currency-php"
@@ -141,42 +151,60 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+import moment from 'moment'
+
 export default {
   data: () => ({
+    sortBy: 'timestamp',
+    sortDesc: true,
     search: '',
     dialog: false,
     dialogDelete: false,
     headers: [
       {
-        text: 'Delivery Name',
+        text: 'Transaction ID',
+        value: 'tranid',
         align: 'start',
-        value: 'name',
+        sortable: true,
       },
-      { text: 'Address', value: 'calories' },
-      // { text: 'Fat (g)', value: 'fat' },
-      // { text: 'Carbs (g)', value: 'carbs' },
-      { text: 'Contact Number', value: 'protein', sortable: false },
+      { text: 'Supplier Code', value: 'code', align: 'start', sortable: false },
+      { text: 'Item Description', value: 'description', sortable: false },
+      { text: 'Cost', value: 'price', sortable: false },
+      { text: 'Date Received', value: 'timestamp', sortable: false },
       { text: 'Actions', value: 'actions', sortable: false },
     ],
-    desserts: [],
+    deliveries: [],
     editedIndex: -1,
     editedDelivery: {
-      supplier: '',
-      item: '',
-      uom: '',
-      qty: '',
-      cost: 0,
+      supplierCode: '',
+      itemCode: '',
+      qty: 0,
+      price: 0,
     },
     defaultDelivery: {
-      supplier: '',
-      item: '',
-      uom: '',
-      qty: '',
-      cost: 0,
+      supplierCode: '',
+      itemCode: '',
+      qty: 0,
+      price: 0,
     },
   }),
 
   computed: {
+    ...mapGetters({
+      deliveryList: 'allDelivery',
+      supplierList: 'allSupplier',
+      itemList: 'allItem',
+    }),
+    deliveryComputed() {
+      return this.deliveryList[0]
+    },
+    supplierComputed() {
+      return this.$store.state.supplierList[0]
+    },
+    itemComputed() {
+      return this.$store.state.itemList[0]
+    },
     formTitle() {
       return this.editedIndex === -1 ? 'New Delivery' : 'Edit Delivery'
     },
@@ -190,101 +218,33 @@ export default {
       val || this.closeDelete()
     },
   },
-
+  beforeCreate() {
+    this.$store.dispatch('getSupplierList')
+    this.$store.dispatch('getItemList')
+  },
   created() {
     this.initialize()
+    this.getDeliveries()
   },
 
   methods: {
-    initialize() {
-      this.desserts = [
-        {
-          name: 'Frozen Yogurt',
-          calories: 159,
-          fat: 6.0,
-          carbs: 24,
-          protein: 4.0,
-        },
-        {
-          name: 'Ice cream sandwich',
-          calories: 237,
-          fat: 9.0,
-          carbs: 37,
-          protein: 4.3,
-        },
-        {
-          name: 'Eclair',
-          calories: 262,
-          fat: 16.0,
-          carbs: 23,
-          protein: 6.0,
-        },
-        {
-          name: 'Cupcake',
-          calories: 305,
-          fat: 3.7,
-          carbs: 67,
-          protein: 4.3,
-        },
-        {
-          name: 'Gingerbread',
-          calories: 356,
-          fat: 16.0,
-          carbs: 49,
-          protein: 3.9,
-        },
-        {
-          name: 'Jelly bean',
-          calories: 375,
-          fat: 0.0,
-          carbs: 94,
-          protein: 0.0,
-        },
-        {
-          name: 'Lollipop',
-          calories: 392,
-          fat: 0.2,
-          carbs: 98,
-          protein: 0,
-        },
-        {
-          name: 'Honeycomb',
-          calories: 408,
-          fat: 3.2,
-          carbs: 87,
-          protein: 6.5,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-        },
-      ]
-    },
+    initialize() {},
 
     editItem(item) {
-      this.editedIndex = this.desserts.indexOf(item)
+      this.editedIndex = this.deliveries.indexOf(item)
       this.editedDelivery = Object.assign({}, item)
       this.dialog = true
+      console.log('edit', this.editedDelivery)
     },
 
     deleteItem(item) {
-      this.editedIndex = this.desserts.indexOf(item)
+      this.editedIndex = this.deliveries.indexOf(item)
       this.editedDelivery = Object.assign({}, item)
       this.dialogDelete = true
     },
 
     deleteItemConfirm() {
-      this.desserts.splice(this.editedIndex, 1)
+      this.deliveries.splice(this.editedIndex, 1)
       this.closeDelete()
     },
 
@@ -306,11 +266,66 @@ export default {
 
     save() {
       if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.editedDelivery)
+        this.editDelivery()
       } else {
-        this.desserts.push(this.editedDelivery)
+        this.addNewDelivery()
       }
+
       this.close()
+    },
+    async getDeliveries() {
+      await this.$store.dispatch('getDeliveryList', {}).then(
+        (result) => {
+          this.deliveries = result
+        },
+        (error) => {
+          console.log('err', error)
+        }
+      )
+    },
+    formatDate(date) {
+      return moment(date).format('LLL')
+    },
+    formatCurrency(price) {
+      let PHP = new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+      })
+      return PHP.format(price)
+    },
+    async addNewDelivery() {
+      await this.$store
+        .dispatch('addDelivery', {
+          supCode: this.editedDelivery.supplierCode.code,
+          itmCode: this.editedDelivery.item.code,
+          itmCost: this.editedDelivery.itemCost,
+          qty: this.editedDelivery.qty,
+        })
+        .then(
+          (res) => {
+            this.getDeliveries()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
+    },
+    async editDelivery() {
+      await this.$store
+        .dispatch('patchDelivery', {
+          supCode: this.editedDelivery.supplierCode.code,
+          itmCode: this.editedDelivery.item.code,
+          itmCost: this.editedDelivery.itemCost,
+          qty: this.editedDelivery.qty,
+        })
+        .then(
+          (res) => {
+            this.getDeliveries()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
     },
   },
 }

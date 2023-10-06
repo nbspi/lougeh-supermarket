@@ -1,13 +1,19 @@
 <template>
   <v-data-table
     :headers="headers"
-    :items="desserts"
+    :items="salesComputed"
     sort-by="calories"
     class="elevation-1"
     loading="false"
     loading-text="Loading... Please wait"
     :search="search"
   >
+    <template v-slot:item.timestamp="{ item }">
+      {{ formatDate(item.timestamp) }}
+    </template>
+    <template v-slot:item.price="{ item }">
+      {{ formatCurrency(item.price) }}
+    </template>
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title> Sales</v-toolbar-title>
@@ -36,12 +42,23 @@
               <v-container>
                 <v-row>
                   <v-col cols="12" sm="6" md="">
-                    <v-text-field
+                    <!-- <v-text-field
                       v-model="editedSales.customer"
                       label="Customer"
                       dense
                       prepend-icon="mdi-account-outline"
-                    ></v-text-field>
+                    ></v-text-field> -->
+                    <v-select
+                      dense
+                      v-model="editedDelivery.code"
+                      :items="supplierComputed"
+                      :item-text="'company_name'"
+                      :item-value="'code'"
+                      menu-props="auto"
+                      label="Select Supplier"
+                      prepend-icon="mdi-account-outline"
+                      return-object
+                    ></v-select>
                   </v-col>
                 </v-row>
                 <v-row>
@@ -130,21 +147,26 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+import moment from 'moment'
+
 export default {
   data: () => ({
+    sales: [],
     search: '',
     dialog: false,
     dialogDelete: false,
     headers: [
       {
-        text: 'Company Name',
+        text: 'Code',
         align: 'start',
-        value: 'name',
+        value: 'code',
       },
-      { text: 'Company Address', value: 'calories' },
+      // { text: 'Item', value: 'calories' },
       // { text: 'Fat (g)', value: 'fat' },
-      // { text: 'Carbs (g)', value: 'carbs' },
-      { text: 'Contact Number', value: 'protein', sortable: false },
+      { text: 'Description', value: 'description', sortable: false },
+      { text: 'Price', value: 'price', sortable: false },
+      { text: 'Sales Date', value: 'timestamp' },
       { text: 'Actions', value: 'actions', sortable: false },
     ],
     desserts: [],
@@ -164,6 +186,12 @@ export default {
   }),
 
   computed: {
+    ...mapGetters({
+      salesList: 'allSales',
+    }),
+    salesComputed() {
+      return this.salesList[0]
+    },
     formTitle() {
       return this.editedIndex === -1 ? 'New Sales' : 'Edit Sales'
     },
@@ -180,83 +208,11 @@ export default {
 
   created() {
     this.initialize()
+    this.getSales()
   },
 
   methods: {
-    initialize() {
-      this.desserts = [
-        {
-          name: 'Frozen Yogurt',
-          calories: 159,
-          fat: 6.0,
-          carbs: 24,
-          protein: 4.0,
-        },
-        {
-          name: 'Ice cream sandwich',
-          calories: 237,
-          fat: 9.0,
-          carbs: 37,
-          protein: 4.3,
-        },
-        {
-          name: 'Eclair',
-          calories: 262,
-          fat: 16.0,
-          carbs: 23,
-          protein: 6.0,
-        },
-        {
-          name: 'Cupcake',
-          calories: 305,
-          fat: 3.7,
-          carbs: 67,
-          protein: 4.3,
-        },
-        {
-          name: 'Gingerbread',
-          calories: 356,
-          fat: 16.0,
-          carbs: 49,
-          protein: 3.9,
-        },
-        {
-          name: 'Jelly bean',
-          calories: 375,
-          fat: 0.0,
-          carbs: 94,
-          protein: 0.0,
-        },
-        {
-          name: 'Lollipop',
-          calories: 392,
-          fat: 0.2,
-          carbs: 98,
-          protein: 0,
-        },
-        {
-          name: 'Honeycomb',
-          calories: 408,
-          fat: 3.2,
-          carbs: 87,
-          protein: 6.5,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-        },
-      ]
-    },
+    initialize() {},
 
     editItem(item) {
       this.editedIndex = this.desserts.indexOf(item)
@@ -298,6 +254,26 @@ export default {
         this.desserts.push(this.editedSales)
       }
       this.close()
+    },
+    formatDate(date) {
+      return moment(date).format('LLL')
+    },
+    formatCurrency(price) {
+      let PHP = new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+      })
+      return PHP.format(price)
+    },
+    async getSales() {
+      await this.$store.dispatch('getSalesList', {}).then(
+        (result) => {
+          this.sales = result
+        },
+        (error) => {
+          console.log('err', error)
+        }
+      )
     },
   },
 }

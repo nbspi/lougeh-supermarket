@@ -1,19 +1,22 @@
 <template>
   <v-data-table
     :headers="headers"
-    :items="desserts"
-    sort-by="calories"
+    :items="supplierComputed"
     class="elevation-1"
-    loading="false"
+    loading="true"
     loading-text="Loading... Please wait"
     :search="search"
+    :sort-by.sync="sortBy"
+    :sort-desc.sync="sortDesc"
   >
+    <template v-slot:item.street="{ item }">
+      {{ item.street + ', ' + item.city + ' ' + item.country }}
+    </template>
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title> Supplier</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-spacer></v-spacer>
-
         <v-dialog v-model="dialog" max-width="500px">
           <template v-slot:activator="{ on, attrs }">
             <v-btn
@@ -37,8 +40,8 @@
                 <v-row>
                   <v-col cols="12" sm="6" md="">
                     <v-text-field
-                      v-model="editedSupplier.name"
-                      label="Company Name"
+                      v-model="editedSupplier.company_name"
+                      label="Supplier Name"
                       dense
                       prepend-icon="mdi-office-building-outline"
                     ></v-text-field>
@@ -53,11 +56,14 @@
                       prepend-icon="mdi-map-marker-outline"
                     ></v-text-field>
                   </v-col>
+                </v-row>
+                <v-row>
                   <v-col cols="12" sm="6" md="">
                     <v-text-field
                       v-model="editedSupplier.city"
                       label="City"
                       dense
+                      prepend-icon="mdi-map-marker-outline"
                     ></v-text-field>
                   </v-col>
                   <v-col cols="12" sm="6" md="">
@@ -71,7 +77,7 @@
                 <v-row>
                   <v-col cols="12" sm="6" md="">
                     <v-text-field
-                      v-model="editedSupplier.contactNumber"
+                      v-model="editedSupplier.contact_number"
                       label="Contact Number"
                       dense
                       prepend-icon="mdi-cellphone-basic"
@@ -134,44 +140,56 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 export default {
   data: () => ({
+    sortBy: 'code',
+    sortDesc: true,
+    suppliers: [],
     search: '',
     dialog: false,
     dialogDelete: false,
     headers: [
       {
-        text: 'Company Name',
+        text: 'Supplier Name',
         align: 'start',
-        value: 'name',
+        value: 'company_name',
       },
-      { text: 'Company Address', value: 'calories' },
-      // { text: 'Fat (g)', value: 'fat' },
-      // { text: 'Carbs (g)', value: 'carbs' },
-      { text: 'Contact Number', value: 'protein', sortable: false },
+      { text: 'Supplier Code', value: 'code' },
+      { text: 'Street', value: 'street' },
+      { text: 'Contact Number', value: 'contact_number', sortable: false },
       { text: 'Actions', value: 'actions', sortable: false },
     ],
     desserts: [],
     editedIndex: -1,
     editedSupplier: {
-      name: '',
+      company_name: '',
       street: '',
       city: '',
       country: '',
-      contactNumber: '+63',
+      contact_number: '',
+      code: '',
     },
     defaultSupplier: {
-      name: '',
+      company_name: '',
       street: '',
       city: '',
       country: '',
-      contactNumber: '+63',
+      contact_number: '',
     },
+    // loading: false,
   }),
 
   computed: {
+    ...mapGetters({
+      supplierList: 'allSupplier',
+    }),
     formTitle() {
       return this.editedIndex === -1 ? 'New Supplier' : 'Edit Supplier'
+    },
+    supplierComputed() {
+      return this.supplierList[0]
     },
   },
 
@@ -183,101 +201,28 @@ export default {
       val || this.closeDelete()
     },
   },
-
   created() {
     this.initialize()
+    this.getSuppliers()
   },
 
   methods: {
-    initialize() {
-      this.desserts = [
-        {
-          name: 'Frozen Yogurt',
-          calories: 159,
-          fat: 6.0,
-          carbs: 24,
-          protein: 4.0,
-        },
-        {
-          name: 'Ice cream sandwich',
-          calories: 237,
-          fat: 9.0,
-          carbs: 37,
-          protein: 4.3,
-        },
-        {
-          name: 'Eclair',
-          calories: 262,
-          fat: 16.0,
-          carbs: 23,
-          protein: 6.0,
-        },
-        {
-          name: 'Cupcake',
-          calories: 305,
-          fat: 3.7,
-          carbs: 67,
-          protein: 4.3,
-        },
-        {
-          name: 'Gingerbread',
-          calories: 356,
-          fat: 16.0,
-          carbs: 49,
-          protein: 3.9,
-        },
-        {
-          name: 'Jelly bean',
-          calories: 375,
-          fat: 0.0,
-          carbs: 94,
-          protein: 0.0,
-        },
-        {
-          name: 'Lollipop',
-          calories: 392,
-          fat: 0.2,
-          carbs: 98,
-          protein: 0,
-        },
-        {
-          name: 'Honeycomb',
-          calories: 408,
-          fat: 3.2,
-          carbs: 87,
-          protein: 6.5,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-        },
-      ]
-    },
+    initialize() {},
 
     editItem(item) {
-      this.editedIndex = this.desserts.indexOf(item)
+      this.editedIndex = this.suppliers.indexOf(item)
       this.editedSupplier = Object.assign({}, item)
       this.dialog = true
     },
 
     deleteItem(item) {
-      this.editedIndex = this.desserts.indexOf(item)
+      this.editedIndex = this.suppliers.indexOf(item)
       this.editedSupplier = Object.assign({}, item)
       this.dialogDelete = true
     },
 
     deleteItemConfirm() {
-      this.desserts.splice(this.editedIndex, 1)
+      this.suppliers.splice(this.editedIndex, 1)
       this.closeDelete()
     },
 
@@ -299,11 +244,61 @@ export default {
 
     save() {
       if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.editedSupplier)
+        // Object.assign(this.suppliers[this.editedIndex], this.editedSupplier)
+        // this.suppliers.push(this.editedSupplier)
+        this.editSupplier()
       } else {
-        this.desserts.push(this.editedSupplier)
+        this.addNewSupplier()
       }
       this.close()
+    },
+    async getSuppliers() {
+      await this.$store.dispatch('getSupplierList', {}).then(
+        (result) => {
+          this.suppliers = result
+        },
+        (error) => {
+          console.log('err', error)
+        }
+      )
+    },
+    async addNewSupplier() {
+      await this.$store
+        .dispatch('addSupplier', {
+          suppname: this.editedSupplier.company_name,
+          street: this.editedSupplier.street,
+          city: this.editedSupplier.city,
+          country: this.editedSupplier.country,
+          contact: this.editedSupplier.contact_number,
+          code: this.editedSupplier.code,
+        })
+        .then(
+          (res) => {
+            this.getSuppliers()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
+    },
+    async editSupplier() {
+      await this.$store
+        .dispatch('patchSupplier', {
+          supname: this.editedSupplier.company_name,
+          street: this.editedSupplier.street,
+          city: this.editedSupplier.city,
+          country: this.editedSupplier.country,
+          contact: this.editedSupplier.contact_number,
+          code: this.editedSupplier.code,
+        })
+        .then(
+          (res) => {
+            this.getSuppliers()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
     },
   },
 }

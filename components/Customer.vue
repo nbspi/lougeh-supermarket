@@ -1,13 +1,21 @@
 <template>
   <v-data-table
     :headers="headers"
-    :items="desserts"
+    :items="customerComputed"
     sort-by="calories"
     class="elevation-1"
     loading="false"
     loading-text="Loading... Please wait"
     :search="search"
+    :sort-by.sync="sortBy"
+    :sort-desc.sync="sortDesc"
   >
+    <template v-slot:item.firstname="{ item }">
+      {{ item.firstname + ' ' + item.lastname }}
+    </template>
+    <template v-slot:item.street="{ item }">
+      {{ item.street + ',' + item.city + ' ' + item.country }}
+    </template>
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title> Customer</v-toolbar-title>
@@ -37,10 +45,17 @@
                 <v-row>
                   <v-col cols="12" sm="6" md="">
                     <v-text-field
-                      v-model="editedCustomer.name"
-                      label="Customer Name"
+                      v-model="editedCustomer.firstname"
+                      label="First Name"
                       dense
                       prepend-icon="mdi-account-outline"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="12" sm="6" md="">
+                    <v-text-field
+                      v-model="editedCustomer.lastname"
+                      label="Last Name"
+                      dense
                     ></v-text-field>
                   </v-col>
                 </v-row>
@@ -53,11 +68,14 @@
                       prepend-icon="mdi-map-marker-outline"
                     ></v-text-field>
                   </v-col>
+                </v-row>
+                <v-row>
                   <v-col cols="12" sm="6" md="">
                     <v-text-field
                       v-model="editedCustomer.city"
                       label="City"
                       dense
+                      prepend-icon="mdi-map-marker-outline"
                     ></v-text-field>
                   </v-col>
                   <v-col cols="12" sm="6" md="">
@@ -71,7 +89,7 @@
                 <v-row>
                   <v-col cols="12" sm="6" md="">
                     <v-text-field
-                      v-model="editedCustomer.contactNumber"
+                      v-model="editedCustomer.contact_number"
                       label="Contact Number"
                       dense
                       prepend-icon="mdi-cellphone-basic"
@@ -134,8 +152,11 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 export default {
   data: () => ({
+    sortBy: 'code',
+    sortDesc: true,
     search: '',
     dialog: false,
     dialogDelete: false,
@@ -143,25 +164,32 @@ export default {
       {
         text: 'Customer Name',
         align: 'start',
-        value: 'name',
+        value: 'firstname',
       },
-      { text: 'Address', value: 'calories' },
+      {
+        text: 'Customer Code',
+        align: 'start',
+        value: 'code',
+      },
+      { text: ' Address', value: 'street' },
       // { text: 'Fat (g)', value: 'fat' },
       // { text: 'Carbs (g)', value: 'carbs' },
-      { text: 'Contact Number', value: 'protein', sortable: false },
+      { text: 'Contact Number', value: 'contact_number', sortable: false },
       { text: 'Actions', value: 'actions', sortable: false },
     ],
-    desserts: [],
+    customers: [],
     editedIndex: -1,
     editedCustomer: {
-      name: '',
+      firstname: '',
+      lastname: '',
       street: '',
       city: '',
       country: '',
       contactNumber: '+63',
     },
     defaultCustomer: {
-      name: '',
+      firstname: '',
+      lastname: '',
       street: '',
       city: '',
       country: '',
@@ -170,6 +198,12 @@ export default {
   }),
 
   computed: {
+    ...mapGetters({
+      customerList: 'allCustomer',
+    }),
+    customerComputed() {
+      return this.customerList[0]
+    },
     formTitle() {
       return this.editedIndex === -1 ? 'New Customer' : 'Edit Customer'
     },
@@ -186,98 +220,26 @@ export default {
 
   created() {
     this.initialize()
+    this.getCustomer()
   },
 
   methods: {
-    initialize() {
-      this.desserts = [
-        {
-          name: 'Frozen Yogurt',
-          calories: 159,
-          fat: 6.0,
-          carbs: 24,
-          protein: 4.0,
-        },
-        {
-          name: 'Ice cream sandwich',
-          calories: 237,
-          fat: 9.0,
-          carbs: 37,
-          protein: 4.3,
-        },
-        {
-          name: 'Eclair',
-          calories: 262,
-          fat: 16.0,
-          carbs: 23,
-          protein: 6.0,
-        },
-        {
-          name: 'Cupcake',
-          calories: 305,
-          fat: 3.7,
-          carbs: 67,
-          protein: 4.3,
-        },
-        {
-          name: 'Gingerbread',
-          calories: 356,
-          fat: 16.0,
-          carbs: 49,
-          protein: 3.9,
-        },
-        {
-          name: 'Jelly bean',
-          calories: 375,
-          fat: 0.0,
-          carbs: 94,
-          protein: 0.0,
-        },
-        {
-          name: 'Lollipop',
-          calories: 392,
-          fat: 0.2,
-          carbs: 98,
-          protein: 0,
-        },
-        {
-          name: 'Honeycomb',
-          calories: 408,
-          fat: 3.2,
-          carbs: 87,
-          protein: 6.5,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-        },
-      ]
-    },
+    initialize() {},
 
     editItem(item) {
-      this.editedIndex = this.desserts.indexOf(item)
+      this.editedIndex = this.customers.indexOf(item)
       this.editedCustomer = Object.assign({}, item)
       this.dialog = true
     },
 
     deleteItem(item) {
-      this.editedIndex = this.desserts.indexOf(item)
+      this.editedIndex = this.customers.indexOf(item)
       this.editedCustomer = Object.assign({}, item)
       this.dialogDelete = true
     },
 
     deleteItemConfirm() {
-      this.desserts.splice(this.editedIndex, 1)
+      this.customers.splice(this.editedIndex, 1)
       this.closeDelete()
     },
 
@@ -299,11 +261,61 @@ export default {
 
     save() {
       if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.editedCustomer)
+        this.editCustomer()
       } else {
-        this.desserts.push(this.editedCustomer)
+        this.addNewCustomer()
       }
       this.close()
+    },
+    async getCustomer() {
+      await this.$store.dispatch('getCustomerList', {}).then(
+        (result) => {
+          this.customers = result
+        },
+        (error) => {
+          console.log('err', error)
+        }
+      )
+    },
+    async addNewCustomer() {
+      await this.$store
+        .dispatch('addCustomer', {
+          fname: this.editedCustomer.firstname,
+          lname: this.editedCustomer.lastname,
+          street: this.editedCustomer.street,
+          city: this.editedCustomer.city,
+          country: this.editedCustomer.country,
+          contact: this.editedCustomer.contactNumber,
+        })
+        .then(
+          (res) => {
+            this.getCustomer()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
+    },
+    async editCustomer() {
+      console.log(' this.editedCustomer', this.editedCustomer)
+      await this.$store
+        .dispatch('patchCustomer', {
+          first: this.editedCustomer.firstname,
+          last: this.editedCustomer.lastname,
+          street: this.editedCustomer.street,
+          city: this.editedCustomer.city,
+          country: this.editedCustomer.country,
+          contact: this.editedCustomer.contactNumber,
+          code: this.editedCustomer.code,
+        })
+        .then(
+          (res) => {
+            this.getCustomer()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
     },
   },
 }

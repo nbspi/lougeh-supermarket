@@ -1,7 +1,7 @@
 <template>
   <v-data-table
     :headers="headers"
-    :items="desserts"
+    :items="items"
     sort-by="calories"
     class="elevation-1"
     loading="false"
@@ -139,13 +139,14 @@ export default {
       {
         text: 'Item Description',
         align: 'start',
-        value: 'name',
+        value: 'item_description',
       },
-      { text: 'Barcode', value: 'calories' },
+      { text: 'Barcode', value: 'barcode' },
       // { text: 'Fat (g)', value: 'fat' },
       // { text: 'Carbs (g)', value: 'carbs' },
-      { text: 'Unit of Measurement', value: 'protein' },
-      { text: 'Price', value: 'protein' },
+      { text: 'Description', value: 'description' },
+      // { text: 'Unit of Measurement', value: 'protein' },
+      // { text: 'Price', value: 'protein' },
       { text: 'Actions', value: 'actions', sortable: false },
     ],
     desserts: [],
@@ -162,6 +163,7 @@ export default {
       uom: '',
       price: 0,
     },
+    items: [],
   }),
 
   computed: {
@@ -181,6 +183,7 @@ export default {
 
   created() {
     this.initialize()
+    this.getItem()
   },
 
   methods: {
@@ -299,6 +302,17 @@ export default {
         this.desserts.push(this.editedItem)
       }
       this.close()
+    },
+    async getItem() {
+      await this.$store.dispatch('getItemList', {}).then(
+        (result) => {
+          this.items = result
+          console.log(this.items, 'etst')
+        },
+        (error) => {
+          console.log('err', error)
+        }
+      )
     },
   },
 }
