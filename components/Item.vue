@@ -7,6 +7,8 @@
     loading="false"
     loading-text="Loading... Please wait"
     :search="search"
+    :sort-by.sync="sortBy"
+    :sort-desc.sync="sortDesc"
   >
     <template v-slot:top>
       <v-toolbar flat>
@@ -56,12 +58,15 @@
                 </v-row>
                 <v-row>
                   <v-col cols="12" sm="6" md="">
-                    <v-text-field
+                    <v-select
+                      :items="itemUom"
+                      item-value="value"
+                      item-text="uomname"
                       v-model="editedItem.uom_id"
                       label="Unit of Measurement"
                       dense
                       prepend-icon="mdi-scale"
-                    ></v-text-field>
+                    ></v-select>
                   </v-col>
                 </v-row>
                 <v-row>
@@ -132,6 +137,8 @@
 <script>
 export default {
   data: () => ({
+    sortBy: 'code',
+    sortDesc: true,
     search: '',
     dialog: false,
     dialogDelete: false,
@@ -155,6 +162,13 @@ export default {
       { text: 'Actions', value: 'actions', sortable: false },
     ],
     items: [],
+    itemUom: [
+      { uomname: 'Piece', value: '1' },
+      { uomname: 'Pack', value: '2' },
+      { uomname: 'Box', value: '3' },
+      { uomname: 'Bag', value: '4' },
+      { uomname: 'Can', value: '5' },
+    ],
     editedIndex: -1,
     editedItem: {
       item_description: '',
@@ -208,7 +222,8 @@ export default {
     },
 
     deleteItemConfirm() {
-      this.items.splice(this.editedIndex, 1)
+      // this.items.splice(this.editedIndex, 1)
+      this.deleteItems()
       this.closeDelete()
     },
 
@@ -232,7 +247,8 @@ export default {
       if (this.editedIndex > -1) {
         this.editItems()
       } else {
-        this.items.push(this.editedItem)
+        // this.items.push(this.editedItem)
+        this.addNewItem()
       }
       this.close()
     },
@@ -255,6 +271,42 @@ export default {
           itmUom: this.editedItem.uom_id,
           itmPrice: this.editedItem.price,
           code: this.editedItem.code,
+        })
+        .then(
+          (res) => {
+            this.getItem()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
+    },
+    async deleteItems() {
+      await this.$store
+        .dispatch('deleteItem', {
+          itmDescription: this.editedItem.item_description,
+          itmBarcode: this.editedItem.barcode,
+          itmUom: this.editedItem.uom_id,
+          itmPrice: this.editedItem.price,
+          code: this.editedItem.code,
+        })
+        .then(
+          (res) => {
+            this.getItem()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
+    },
+
+    async addNewItem() {
+      await this.$store
+        .dispatch('addItem', {
+          itmDescription: this.editedItem.item_description,
+          itmBarcode: this.editedItem.barcode,
+          itmUom: this.editedItem.uom_id,
+          itmPrice: this.editedItem.price,
         })
         .then(
           (res) => {

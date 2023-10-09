@@ -222,7 +222,8 @@ export default {
     },
 
     deleteItemConfirm() {
-      this.suppliers.splice(this.editedIndex, 1)
+      // this.suppliers.splice(this.editedIndex, 1)
+      this.deleteSupplier()
       this.closeDelete()
     },
 
@@ -282,6 +283,25 @@ export default {
     async editSupplier() {
       await this.$store
         .dispatch('patchSupplier', {
+          supname: this.editedSupplier.company_name,
+          street: this.editedSupplier.street,
+          city: this.editedSupplier.city,
+          country: this.editedSupplier.country,
+          contact: this.editedSupplier.contact_number,
+          code: this.editedSupplier.code,
+        })
+        .then(
+          (res) => {
+            this.getSuppliers()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
+    },
+    async deleteSupplier() {
+      await this.$store
+        .dispatch('deleteSupplier', {
           supname: this.editedSupplier.company_name,
           street: this.editedSupplier.street,
           city: this.editedSupplier.city,

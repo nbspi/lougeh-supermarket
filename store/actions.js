@@ -89,6 +89,28 @@ export default {
       return res.data.msg
     })
   },
+  async deleteSupplier(
+    { commit },
+    { supname, street, city, country, contact, code }
+  ) {
+    await axios({
+      method: 'DELETE',
+      url: `${this.$axios.defaults.baseURL}/supplier/delete/${code}`,
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      data: {
+        supname,
+        street,
+        city,
+        country,
+        contact,
+      },
+    }).then((res) => {
+      //   commit('GET_SUPPLIER_LIST', res.data.msg)
+      return res.data.msg
+    })
+  },
   async addDelivery({ commit }, { supCode, itmCode, itmCost, qty }) {
     await axios({
       method: 'POST',
@@ -108,10 +130,29 @@ export default {
     })
   },
   async patchDelivery({ commit }, { qty, supCode, itmCode, itmCost, tranid }) {
-    console.log('tt', itmCost)
+    console.log('tt', itmCode)
     await axios({
       method: 'PATCH',
       url: `${this.$axios.defaults.baseURL}/delivery/patch/${tranid}`,
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      data: {
+        supCode,
+        itmCode,
+        itmCost,
+        qty,
+      },
+    }).then((res) => {
+      //   commit('GET_SUPPLIER_LIST', res.data.msg)
+      return res.data.msg
+    })
+  },
+  async deleteDelivery({ commit }, { qty, supCode, itmCode, itmCost, tranid }) {
+    console.log('tt', itmCost)
+    await axios({
+      method: 'DELETE',
+      url: `${this.$axios.defaults.baseURL}/delivery/delete/${tranid}`,
       //   headers: {
       //     Authorization: `Bearer ${token}`,
       //   },
@@ -174,6 +215,30 @@ export default {
       return res.data.msg
     })
   },
+  async deleteCustomer(
+    { commit },
+    { first, last, street, city, country, contact, code }
+  ) {
+    console.log('code', code)
+    await axios({
+      method: 'DELETE',
+      url: `${this.$axios.defaults.baseURL}/customer/delete/${code}`,
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      data: {
+        first,
+        last,
+        street,
+        city,
+        country,
+        contact,
+      },
+    }).then((res) => {
+      //   commit('GET_SUPPLIER_LIST', res.data.msg)
+      return res.data.msg
+    })
+  },
   async addSales({ commit }, { code, cusCode, itmCode, qty, itmCost }) {
     await axios({
       method: 'POST',
@@ -186,6 +251,27 @@ export default {
         itmCode,
         qty,
         itmCost,
+      },
+    }).then((res) => {
+      //   commit('GET_SUPPLIER_LIST', res.data.msg)
+      return res.data.msg
+    })
+  },
+  async addItem(
+    { commit },
+    { code, itmDescription, itmBarcode, itmUom, itmPrice }
+  ) {
+    await axios({
+      method: 'POST',
+      url: `${this.$axios.defaults.baseURL}/item`,
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      data: {
+        itmDescription,
+        itmBarcode,
+        itmUom,
+        itmPrice,
       },
     }).then((res) => {
       //   commit('GET_SUPPLIER_LIST', res.data.msg)
@@ -210,6 +296,24 @@ export default {
       return res.data.msg
     })
   },
+  async deleteSales({ commit }, { code, stransid, itmCode, qty, itmCost }) {
+    console.log('code', itmCode, qty)
+    await axios({
+      method: 'DELETE',
+      url: `${this.$axios.defaults.baseURL}/sales/delete/${stransid}`,
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      data: {
+        itmCode,
+        qty,
+        itmCost,
+      },
+    }).then((res) => {
+      //   commit('GET_SUPPLIER_LIST', res.data.msg)
+      return res.data.msg
+    })
+  },
 
   async patchItem(
     { commit },
@@ -219,6 +323,28 @@ export default {
     await axios({
       method: 'PATCH',
       url: `${this.$axios.defaults.baseURL}/item/patch/${code}`,
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      data: {
+        itmDescription,
+        itmBarcode,
+        itmUom,
+        itmPrice,
+      },
+    }).then((res) => {
+      //   commit('GET_SUPPLIER_LIST', res.data.msg)
+      return res.data.msg
+    })
+  },
+  async deleteItem(
+    { commit },
+    { code, itmDescription, itmBarcode, itmUom, itmPrice }
+  ) {
+    console.log('code', code)
+    await axios({
+      method: 'DELETE',
+      url: `${this.$axios.defaults.baseURL}/item/delete/${code}`,
       //   headers: {
       //     Authorization: `Bearer ${token}`,
       //   },

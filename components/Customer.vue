@@ -239,7 +239,8 @@ export default {
     },
 
     deleteItemConfirm() {
-      this.customers.splice(this.editedIndex, 1)
+      // this.customers.splice(this.editedIndex, 1)
+      this.deleteCustomer()
       this.closeDelete()
     },
 
@@ -300,6 +301,27 @@ export default {
       console.log(' this.editedCustomer', this.editedCustomer)
       await this.$store
         .dispatch('patchCustomer', {
+          first: this.editedCustomer.firstname,
+          last: this.editedCustomer.lastname,
+          street: this.editedCustomer.street,
+          city: this.editedCustomer.city,
+          country: this.editedCustomer.country,
+          contact: this.editedCustomer.contactNumber,
+          code: this.editedCustomer.code,
+        })
+        .then(
+          (res) => {
+            this.getCustomer()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
+    },
+    async deleteCustomer() {
+      console.log(' this.editedCustomer', this.editedCustomer)
+      await this.$store
+        .dispatch('deleteCustomer', {
           first: this.editedCustomer.firstname,
           last: this.editedCustomer.lastname,
           street: this.editedCustomer.street,

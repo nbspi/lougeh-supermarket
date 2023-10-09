@@ -16,6 +16,9 @@
     <template v-slot:item.price="{ item }">
       {{ formatCurrency(item.price) }}
     </template>
+    <template v-slot:item.fname="{ item }">
+      {{ item.fname + ' ' + item.lname }}
+    </template>
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title> Sales</v-toolbar-title>
@@ -194,6 +197,7 @@ export default {
       { text: 'Quantity', value: 'quantity', sortable: false },
       { text: 'Price', value: 'price', sortable: false },
       { text: 'Customer Code', value: 'cuscode', sortable: false },
+      { text: 'Customer Name', value: 'fname', sortable: false },
       { text: 'Sales Date', value: 'timestamp' },
       { text: 'Actions', value: 'actions', sortable: false },
     ],
@@ -270,7 +274,8 @@ export default {
     },
 
     deleteItemConfirm() {
-      this.sales.splice(this.editedIndex, 1)
+      // this.sales.splice(this.editedIndex, 1)
+      this.deleteSales()
       this.closeDelete()
     },
 
@@ -347,6 +352,24 @@ export default {
     async editSales() {
       await this.$store
         .dispatch('patchSales', {
+          // code: this.editedSales.code,
+          stransid: this.editedSales.transid,
+          itmCode: this.editedSales.code,
+          qty: this.editedSales.quantity,
+          itmCost: this.editedSales.price,
+        })
+        .then(
+          (res) => {
+            this.getSales()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
+    },
+    async deleteSales() {
+      await this.$store
+        .dispatch('deleteSales', {
           // code: this.editedSales.code,
           stransid: this.editedSales.transid,
           itmCode: this.editedSales.code,

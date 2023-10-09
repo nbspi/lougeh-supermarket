@@ -45,7 +45,7 @@
                   <v-col cols="12" sm="6" md="">
                     <v-select
                       dense
-                      v-model="editedDelivery.code"
+                      v-model="editedDelivery.supplierCode"
                       :items="supplierComputed"
                       :item-text="'company_name'"
                       :item-value="'code'"
@@ -178,6 +178,7 @@ export default {
         align: 'start',
         sortable: true,
       },
+      { text: 'Supplier Name', value: 'cname', align: 'start', sortable: true },
       { text: 'Item Code', value: 'code', align: 'start', sortable: true },
       { text: 'Item Description', value: 'description', sortable: true },
       { text: 'Cost', value: 'price', sortable: true },
@@ -261,7 +262,8 @@ export default {
     },
 
     deleteItemConfirm() {
-      this.deliveries.splice(this.editedIndex, 1)
+      // this.deliveries.splice(this.editedIndex, 1)
+      this.deleteDelivery()
       this.closeDelete()
     },
 
@@ -311,12 +313,13 @@ export default {
       return PHP.format(price)
     },
     async addNewDelivery() {
+      console.log('this.editedDelivery', this.editedDelivery)
       await this.$store
         .dispatch('addDelivery', {
-          supCode: this.editedDelivery.supplierCode.code,
-          itmCode: this.editedDelivery.item.code,
-          itmCost: this.editedDelivery.itemCost,
-          quantity: this.editedDelivery.quantity,
+          supCode: this.editedDelivery.code.code,
+          itmCode: this.editedDelivery.description.code,
+          itmCost: this.editedDelivery.description.price,
+          qty: this.editedDelivery.quantity,
         })
         .then(
           (res) => {
@@ -328,8 +331,27 @@ export default {
         )
     },
     async editDelivery() {
+      console.log('editedDelivery', this.editedDelivery)
       await this.$store
         .dispatch('patchDelivery', {
+          supCode: this.editedDelivery.supplierCode.code,
+          itmCode: this.editedDelivery.code,
+          itmCost: this.editedDelivery.price,
+          tranid: this.editedDelivery.tranid,
+          qty: this.editedDelivery.quantity,
+        })
+        .then(
+          (res) => {
+            this.getDeliveries()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
+    },
+    async deleteDelivery() {
+      await this.$store
+        .dispatch('deleteDelivery', {
           supCode: this.editedDelivery.code.code,
           itmCode: this.editedDelivery.code,
           itmCost: this.editedDelivery.price,
