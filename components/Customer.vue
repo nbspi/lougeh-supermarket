@@ -185,7 +185,7 @@ export default {
       street: '',
       city: '',
       country: '',
-      contactNumber: '+63',
+      contact_number: '+63',
     },
     defaultCustomer: {
       firstname: '',
@@ -193,7 +193,7 @@ export default {
       street: '',
       city: '',
       country: '',
-      contactNumber: '+63',
+      contact_number: '+63',
     },
   }),
 
@@ -286,7 +286,7 @@ export default {
           street: this.editedCustomer.street,
           city: this.editedCustomer.city,
           country: this.editedCustomer.country,
-          contact: this.editedCustomer.contactNumber,
+          contact: this.editedCustomer.contact_number,
         })
         .then(
           (res) => {
@@ -306,7 +306,7 @@ export default {
           street: this.editedCustomer.street,
           city: this.editedCustomer.city,
           country: this.editedCustomer.country,
-          contact: this.editedCustomer.contactNumber,
+          contact: this.editedCustomer.contact_number,
           code: this.editedCustomer.code,
         })
         .then(
@@ -327,7 +327,7 @@ export default {
           street: this.editedCustomer.street,
           city: this.editedCustomer.city,
           country: this.editedCustomer.country,
-          contact: this.editedCustomer.contactNumber,
+          contact: this.editedCustomer.contact_number,
           code: this.editedCustomer.code,
         })
         .then(
