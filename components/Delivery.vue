@@ -43,7 +43,6 @@
               <v-container>
                 <v-row>
                   <v-col cols="12" sm="6" md="">
-                    {{ editedDelivery.code }}
                     <v-select
                       dense
                       v-model="editedDelivery.code"
@@ -59,7 +58,6 @@
                 </v-row>
                 <v-row>
                   <v-col cols="12" sm="6" md="">
-                    {{ editedDelivery.description }}
                     <v-select
                       dense
                       v-model="editedDelivery.description"
@@ -70,6 +68,8 @@
                       label="Select Item"
                       prepend-icon="mdi-format-list-bulleted"
                       return-object
+                      cache-items
+                      value="editedDelivery.description"
                     ></v-select>
                   </v-col>
                 </v-row>
@@ -90,6 +90,16 @@
                     <v-text-field
                       v-model="editedDelivery.price"
                       label="Cost"
+                      dense
+                      prepend-icon="mdi-currency-php"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12" sm="6" md="">
+                    <v-text-field
+                      v-model="editedDelivery.quantity"
+                      label="Quantity"
                       dense
                       prepend-icon="mdi-currency-php"
                     ></v-text-field>
@@ -168,9 +178,10 @@ export default {
         align: 'start',
         sortable: true,
       },
-      { text: 'Supplier Code', value: 'code', align: 'start', sortable: false },
-      { text: 'Item Description', value: 'description', sortable: false },
-      { text: 'Cost', value: 'price', sortable: false },
+      { text: 'Item Code', value: 'code', align: 'start', sortable: true },
+      { text: 'Item Description', value: 'description', sortable: true },
+      { text: 'Cost', value: 'price', sortable: true },
+      { text: 'Quantity', value: 'quantity', sortable: true },
       { text: 'Date Received', value: 'timestamp', sortable: false },
       { text: 'Actions', value: 'actions', sortable: false },
     ],
@@ -179,14 +190,18 @@ export default {
     editedDelivery: {
       supplierCode: '',
       itemCode: '',
-      qty: 0,
+      quantity: 0,
       price: 0,
+      description: '',
+      code: '',
     },
     defaultDelivery: {
       supplierCode: '',
       itemCode: '',
-      qty: 0,
+      quantity: 0,
       price: 0,
+      description: '',
+      code: '',
     },
   }),
 
@@ -231,10 +246,12 @@ export default {
     initialize() {},
 
     editItem(item) {
+      console.log('item', item)
       this.editedIndex = this.deliveries.indexOf(item)
       this.editedDelivery = Object.assign({}, item)
       this.dialog = true
       console.log('edit', this.editedDelivery)
+      console.log('edit', this.editedDelivery.description)
     },
 
     deleteItem(item) {
@@ -299,7 +316,7 @@ export default {
           supCode: this.editedDelivery.supplierCode.code,
           itmCode: this.editedDelivery.item.code,
           itmCost: this.editedDelivery.itemCost,
-          qty: this.editedDelivery.qty,
+          quantity: this.editedDelivery.quantity,
         })
         .then(
           (res) => {
@@ -313,10 +330,11 @@ export default {
     async editDelivery() {
       await this.$store
         .dispatch('patchDelivery', {
-          supCode: this.editedDelivery.supplierCode.code,
-          itmCode: this.editedDelivery.item.code,
-          itmCost: this.editedDelivery.itemCost,
-          qty: this.editedDelivery.qty,
+          supCode: this.editedDelivery.code.code,
+          itmCode: this.editedDelivery.code,
+          itmCost: this.editedDelivery.price,
+          tranid: this.editedDelivery.tranid,
+          qty: this.editedDelivery.quantity,
         })
         .then(
           (res) => {

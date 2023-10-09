@@ -244,8 +244,6 @@ export default {
 
     save() {
       if (this.editedIndex > -1) {
-        // Object.assign(this.suppliers[this.editedIndex], this.editedSupplier)
-        // this.suppliers.push(this.editedSupplier)
         this.editSupplier()
       } else {
         this.addNewSupplier()

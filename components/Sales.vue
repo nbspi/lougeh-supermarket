@@ -7,6 +7,8 @@
     loading="false"
     loading-text="Loading... Please wait"
     :search="search"
+    :sort-by.sync="sortBy"
+    :sort-desc.sync="sortDesc"
   >
     <template v-slot:item.timestamp="{ item }">
       {{ formatDate(item.timestamp) }}
@@ -49,13 +51,14 @@
                       prepend-icon="mdi-account-outline"
                     ></v-text-field> -->
                     <v-select
+                      v-show="edit == false"
                       dense
-                      v-model="editedDelivery.code"
-                      :items="supplierComputed"
-                      :item-text="'company_name'"
+                      v-model="editedSales.code"
+                      :items="customerComputed"
+                      :item-text="'code'"
                       :item-value="'code'"
                       menu-props="auto"
-                      label="Select Supplier"
+                      label="Select Customer"
                       prepend-icon="mdi-account-outline"
                       return-object
                     ></v-select>
@@ -63,18 +66,33 @@
                 </v-row>
                 <v-row>
                   <v-col cols="12" sm="6" md="">
-                    <v-text-field
-                      v-model="editedSales.item"
-                      label="Item"
+                    <v-select
                       dense
+                      v-model="editedSales.item"
+                      :items="itemComputed"
+                      :item-text="'item_description'"
+                      :item-value="'code'"
+                      menu-props="auto"
+                      label="Select Item"
                       prepend-icon="mdi-format-list-bulleted"
-                    ></v-text-field>
+                      return-object
+                    ></v-select>
                   </v-col>
                 </v-row>
+                <!-- <v-row>
+                  <v-col cols="12" sm="6" md="">
+                    <v-text-field
+                      v-model="editedSales.code"
+                      label="Item Code"
+                      dense
+                      prepend-icon="mdi-package-variant-closed"
+                    ></v-text-field>
+                  </v-col>
+                </v-row> -->
                 <v-row>
                   <v-col cols="12" sm="6" md="">
                     <v-text-field
-                      v-model="editedSales.qty"
+                      v-model="editedSales.quantity"
                       label="Quantity"
                       dense
                       prepend-icon="mdi-package-variant-closed"
@@ -152,35 +170,46 @@ import moment from 'moment'
 
 export default {
   data: () => ({
+    sortBy: 'timestamp',
+    sortDesc: true,
+    edit: false,
     sales: [],
     search: '',
     dialog: false,
     dialogDelete: false,
     headers: [
       {
-        text: 'Code',
+        text: 'Transaction ID',
+        align: 'start',
+        value: 'transid',
+      },
+      {
+        text: 'Item Code',
         align: 'start',
         value: 'code',
       },
       // { text: 'Item', value: 'calories' },
       // { text: 'Fat (g)', value: 'fat' },
       { text: 'Description', value: 'description', sortable: false },
+      { text: 'Quantity', value: 'quantity', sortable: false },
       { text: 'Price', value: 'price', sortable: false },
+      { text: 'Customer Code', value: 'cuscode', sortable: false },
       { text: 'Sales Date', value: 'timestamp' },
       { text: 'Actions', value: 'actions', sortable: false },
     ],
-    desserts: [],
     editedIndex: -1,
     editedSales: {
-      customer: '',
-      item: '',
+      cuscode: '',
+      code: '',
       qty: '',
       price: 0,
+      transid: 0,
+      quantity: '',
     },
     defaultSales: {
-      customer: '',
-      item: '',
-      qty: '',
+      cusCode: '',
+      itmCode: '',
+      quantity: '',
       price: 0,
     },
   }),
@@ -188,9 +217,17 @@ export default {
   computed: {
     ...mapGetters({
       salesList: 'allSales',
+      customerList: 'allCustomer',
+      itemList: 'allItem',
     }),
     salesComputed() {
       return this.salesList[0]
+    },
+    customerComputed() {
+      return this.$store.state.customerList[0]
+    },
+    itemComputed() {
+      return this.$store.state.itemList[0]
     },
     formTitle() {
       return this.editedIndex === -1 ? 'New Sales' : 'Edit Sales'
@@ -205,6 +242,10 @@ export default {
       val || this.closeDelete()
     },
   },
+  beforeCreate() {
+    this.$store.dispatch('getCustomerList')
+    this.$store.dispatch('getItemList')
+  },
 
   created() {
     this.initialize()
@@ -215,19 +256,21 @@ export default {
     initialize() {},
 
     editItem(item) {
-      this.editedIndex = this.desserts.indexOf(item)
+      this.edit = true
+      this.editedIndex = this.sales.indexOf(item)
       this.editedSales = Object.assign({}, item)
       this.dialog = true
+      console.log('edited', this.editedSales)
     },
 
     deleteItem(item) {
-      this.editedIndex = this.desserts.indexOf(item)
+      this.editedIndex = this.sales.indexOf(item)
       this.editedSales = Object.assign({}, item)
       this.dialogDelete = true
     },
 
     deleteItemConfirm() {
-      this.desserts.splice(this.editedIndex, 1)
+      this.sales.splice(this.editedIndex, 1)
       this.closeDelete()
     },
 
@@ -237,6 +280,7 @@ export default {
         this.editedSales = Object.assign({}, this.defaultSales)
         this.editedIndex = -1
       })
+      this.edit = false
     },
 
     closeDelete() {
@@ -249,9 +293,9 @@ export default {
 
     save() {
       if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.editedSales)
+        this.editSales()
       } else {
-        this.desserts.push(this.editedSales)
+        this.addNewSales()
       }
       this.close()
     },
@@ -274,6 +318,49 @@ export default {
           console.log('err', error)
         }
       )
+    },
+    async addNewSales() {
+      console.log('this.editedSales', this.editedSales)
+      await this.$store
+        .dispatch('addSales', {
+          // code: this.editedSales.code.code,
+          cusCode: this.editedSales.code.code,
+          itmCode: this.editedSales.item.code,
+          qty: this.editedSales.quantity,
+          itmCost: this.editedSales.price,
+        })
+        .then(
+          (res) => {
+            this.getSales()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
+      this.defaultSales = {
+        cusCode: '',
+        itmCode: '',
+        quantity: '',
+        price: 0,
+      }
+    },
+    async editSales() {
+      await this.$store
+        .dispatch('patchSales', {
+          // code: this.editedSales.code,
+          stransid: this.editedSales.transid,
+          itmCode: this.editedSales.code,
+          qty: this.editedSales.quantity,
+          itmCost: this.editedSales.price,
+        })
+        .then(
+          (res) => {
+            this.getSales()
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
     },
   },
 }

@@ -107,19 +107,19 @@ export default {
       return res.data.msg
     })
   },
-  async patchDelivery({ commit }, { supCode, itmCode, qty, itmCost }) {
+  async patchDelivery({ commit }, { qty, supCode, itmCode, itmCost, tranid }) {
+    console.log('tt', itmCost)
     await axios({
       method: 'PATCH',
-      url: `${this.$axios.defaults.baseURL}/delivery/patch/${itmCost}`,
+      url: `${this.$axios.defaults.baseURL}/delivery/patch/${tranid}`,
       //   headers: {
       //     Authorization: `Bearer ${token}`,
       //   },
       data: {
         supCode,
         itmCode,
-        qty,
         itmCost,
-        contact,
+        qty,
       },
     }).then((res) => {
       //   commit('GET_SUPPLIER_LIST', res.data.msg)
@@ -168,6 +168,65 @@ export default {
         city,
         country,
         contact,
+      },
+    }).then((res) => {
+      //   commit('GET_SUPPLIER_LIST', res.data.msg)
+      return res.data.msg
+    })
+  },
+  async addSales({ commit }, { code, cusCode, itmCode, qty, itmCost }) {
+    await axios({
+      method: 'POST',
+      url: `${this.$axios.defaults.baseURL}/sales`,
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      data: {
+        cusCode,
+        itmCode,
+        qty,
+        itmCost,
+      },
+    }).then((res) => {
+      //   commit('GET_SUPPLIER_LIST', res.data.msg)
+      return res.data.msg
+    })
+  },
+  async patchSales({ commit }, { code, stransid, itmCode, qty, itmCost }) {
+    console.log('code', itmCode, qty)
+    await axios({
+      method: 'PATCH',
+      url: `${this.$axios.defaults.baseURL}/sales/patch/${stransid}`,
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      data: {
+        itmCode,
+        qty,
+        itmCost,
+      },
+    }).then((res) => {
+      //   commit('GET_SUPPLIER_LIST', res.data.msg)
+      return res.data.msg
+    })
+  },
+
+  async patchItem(
+    { commit },
+    { code, itmDescription, itmBarcode, itmUom, itmPrice }
+  ) {
+    console.log('code', code)
+    await axios({
+      method: 'PATCH',
+      url: `${this.$axios.defaults.baseURL}/item/patch/${code}`,
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      data: {
+        itmDescription,
+        itmBarcode,
+        itmUom,
+        itmPrice,
       },
     }).then((res) => {
       //   commit('GET_SUPPLIER_LIST', res.data.msg)
